@@ -27,8 +27,22 @@ Final local gates:
 - `npm run build`: production bundle builds.
 - `npm run test:e2e`: 28 tests pass across desktop Chromium and mobile emulation, served from the production build using Vite preview.
 
-Scope of verification: transport and signer tests use controlled relays and keys. Deployment HTTP requests and GitHub CLI writes are mocked in script tests. Local verification does not establish a successful live Bunny deployment or GitHub-hosted workflow run; deployment requires the user's configured Bunny resources and GitHub environment. Setup instructions and the required configuration are in the README.
+Scope of verification: transport and signer tests use controlled relays and keys. Deployment HTTP requests and GitHub CLI writes are mocked in script tests. Local verification does not establish a successful live Bunny deployment or GitHub-hosted workflow run; deployment requires the user's configured Bunny resources and GitHub environment. Setup instructions and required configuration are in the [deployment guide](deployment.md).
 
 The reported Supersonic RC Revive event (`556f7c44…`) is retained as a signed regression fixture. Tests verify that its Nostr Git source, Blossom archive and commit reference survive migration, and that preparation exposes raw JSON and indexed validation context.
 
 Address-chip browser checks exercise actual clipboard writes on desktop/mobile, keyboard activation, selection remaining unchanged after copying, the source versus migrated author address, and manual copying when clipboard access is denied.
+
+## Run the checks
+
+```sh
+npm run check
+npm test
+npm run build
+npx playwright install chromium
+npm run test:e2e
+```
+
+Use `npm run preview` to serve a production build locally. Browser tests also run against the production build and cover desktop and mobile layouts, batch migration, cross-author copies, clipboard behavior, validation context, and encrypted NIP-46 exchanges with a test signer and relay.
+
+Unit tests cover schema conversion, metadata preservation, signature checks, cancellation, retries, and deployment scripts. Tests use controlled keys and relays. Recorded results and scope are listed above.
