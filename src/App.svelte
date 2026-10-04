@@ -1,11 +1,12 @@
 <script lang="ts">
   import Auth from './components/Auth.svelte'
+  import AddressChip from './components/AddressChip.svelte'
   import { onDestroy } from 'svelte'
   import { NappletRepository, relayUrls, type Session } from './lib/nostr'
   import {
     createDraft,
     title,
-    migrationIssues,
+    migrationDiagnostics,
     migrationNotes,
     buildMigration,
     type Draft,
@@ -35,7 +36,7 @@
     generation = 0
   const steps = ['Connect', 'Choose', 'Prepare', 'Review', 'Migrate']
   let current = $derived(drafts[index]),
-    issues = $derived(current ? migrationIssues(current) : []),
+    issues = $derived(current ? migrationDiagnostics(current) : []),
     successes = $derived(outcomes.filter((o) => o.state === 'success').length)
   async function login(value: Session) {
     session = value
@@ -277,21 +278,24 @@
               >{/if}
           </div>
           <div class="napplet-list">
-            {#each events as event}<label class="napplet-row"
-                ><input
-                  type="checkbox"
-                  bind:group={selected}
-                  value={event.id}
-                /><span class="app-icon">↗</span><span
-                  ><strong>{title(event)}</strong><small
-                    >{event.kind === 5129
-                      ? 'Snapshot'
-                      : event.kind === 15129
-                        ? 'Root napplet'
-                        : 'Named napplet'}</small
-                  ></span
-                ></label
-              >{/each}
+            {#each events as event}<div class="napplet-row">
+                <label class="napplet-choice"
+                  ><input
+                    type="checkbox"
+                    bind:group={selected}
+                    value={event.id}
+                  /><span class="app-icon">↗</span><span
+                    ><strong>{title(event)}</strong><small
+                      >{event.kind === 5129
+                        ? 'Snapshot'
+                        : event.kind === 15129
+                          ? 'Root napplet'
+                          : 'Named napplet'}</small
+                    ></span
+                  ></label
+                >
+                <div class="row-address"><AddressChip {event} /></div>
+              </div>{/each}
           </div>
           <button
             class="primary wide"
@@ -306,6 +310,9 @@
           >
         </div>
         <h1>{title(current.original)}</h1>
+        <div class="heading-address">
+          <AddressChip event={current.original} />
+        </div>
         <p class="intro">A few details for its next chapter.</p>
         <label for="description"
           >Description <span class="required">REQUIRED</span></label
@@ -343,8 +350,29 @@
             </div>{/each}
         </div>
         {#if issues.length}<div class="notice" role="status">
-            {#each issues as issue}<p>{issue}</p>{/each}
+            {#each issues as issue}<div class="validation-issue">
+                <p>{issue.message}</p>
+                {#each issue.entries as entry}<div class="issue-entry">
+                    <code>{entry.path}</code>
+                    <pre>{JSON.stringify(entry.value, null, 2)}</pre>
+                  </div>{/each}
+              </div>{/each}
           </div>{/if}
+        {#key current.original.id}<details class="json raw-event">
+            <summary>View raw event JSON</summary>
+            <p class="hint">The original signed event, before migration.</p>
+            <pre aria-label="Original event JSON">{JSON.stringify(
+                current.original,
+                null,
+                2,
+              )}</pre>
+            <a
+              class="backup"
+              href={`data:application/json;charset=utf-8,${encodeURIComponent(JSON.stringify(current.original, null, 2))}`}
+              download={`napplet-${current.original.id}.json`}
+              >↓ Download event JSON</a
+            >
+          </details>{/key}
         <div class="actions">
           <button
             class="text-button"
@@ -383,6 +411,9 @@
               ><span class="pill">{draft.capabilities.length} APIs</span
               ></summary
             >
+            <div class="review-address">
+              <AddressChip event={draft.original} />
+            </div>
             <p class="description-preview">{draft.description}</p>
             <div class="chips">
               {#each draft.capabilities as cap}<span class="chip"
@@ -481,6 +512,9 @@
                         : 'Queued'}</span
               >
             </div>
+            {#if result?.event}<div class="result-address">
+                <AddressChip event={result.event} />
+              </div>{/if}
             {#if result?.error}<p class="error">
                 {result.error}
               </p>{/if}{#if result?.accepted}<p class="hint">

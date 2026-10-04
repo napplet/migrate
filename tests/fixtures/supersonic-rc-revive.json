@@ -1,0 +1,48 @@
+{
+  "kind": 35129,
+  "id": "556f7c444d9d1a3b222ec38ce3ea4e23313fc6158b3718990ddba33a2ea6e952",
+  "pubkey": "266815e0c9210dfa324c6cba3573b14bee49da4209a9456f9484e5106cd408a5",
+  "created_at": 1791043684,
+  "tags": [
+    [
+      "path",
+      "/index.html",
+      "4e768893a0a1903c026cfc916f184c0917a947d95250d5b79e04d657578951aa"
+    ],
+    [
+      "x",
+      "ffddddf1e747a8dd3967f61af7906d859d9a9bc38582864616457134659c9f77",
+      "aggregate"
+    ],
+    ["title", "Supersonic RC Revive"],
+    [
+      "app",
+      "32267:266815e0c9210dfa324c6cba3573b14bee49da4209a9456f9484e5106cd408a5:n-143146b0d6f-ae7b0257f3d21bdd",
+      "wss://relay.napplet.soy/"
+    ],
+    [
+      "description",
+      "A faithful remake of the Shockwave RC-car game SuperSonic RC, rebuilt with three.js. The car handling is ported line by line from the original Lingo scripts, with all five modes: Free Driving, Checkpoint Chase, Stunt Rally, Scavenger Hunt and the Supersonic Challenge. Drive with the arrow keys or WASD, a gamepad, or the on-screen touch controls. The art and sound are a recreated asset pack, and you can load another .ssrcpack from the title screen."
+    ],
+    ["server", "https://blossom.napplet.soy"],
+    ["requires", "resource"],
+    ["t", "game"],
+    ["t", "racing"],
+    ["t", "rc-car"],
+    ["t", "driving"],
+    ["t", "remake"],
+    ["t", "shockwave"],
+    [
+      "source",
+      "nostr://npub1ye5ptcxfyyxl5vjvdjar2ua3f0hynkjzpx552mu5snj3qmx5pzjscpknpr/wss%3A%2F%2Fgit.napplet.soy%2F/n-143146b0d6f"
+    ],
+    ["source-commit", "6fbf09f88a0aff402ffd2e39bf820b67940f8fa8"],
+    [
+      "source-archive",
+      "https://blossom.napplet.soy/76e4eb30c67a6f45736b1fa7beb4b4258e8d1518bb18e704b63a8651d277fccc"
+    ],
+    ["d", "n-143146b0d6f"]
+  ],
+  "content": "",
+  "sig": "d7795ab4dfedea667b24c701d1528d7ccb1b60135fe0d1c6580d64ab4644ceb72422fe94678f7216ec0cffab913c87f0333a2ae180c0ec99710f87215746a4b8"
+}

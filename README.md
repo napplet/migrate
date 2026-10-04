@@ -13,7 +13,7 @@ npm run dev
 
 Connect a NIP-07 extension, scan a NostrConnect QR code, or paste a bunker URI. The connection relay defaults to `wss://bucket.coracle.social` and can be changed before connecting. The visible relay setting overrides the relay in a bunker URI; your signer must listen there. Signer approval links are shown when requested. Connection keys are ephemeral and discarded on logout or refresh.
 
-Load your napplets or enter any napplet `naddr`. After login, the app looks up your latest signed NIP-65 (`kind:10002`) relay list using bootstrap relays. Your write relays and unmarked read/write relays are used for both napplet discovery and publishing; read-only relays are excluded. If no list is available, editable fallback relays are shown. An explicitly empty or read-only list requires adding a write relay. For another author’s naddr, discovery also checks that author’s NIP-65 write relays and the address’s relay hints. The migrated copy is signed by your connected account and published to your relays, leaving the source event intact. These relays remain configurable separately from the signer connection relay. Select events, prepare each one, review the changes, then migrate. A missing description must be filled in; `theme` starts as optional. The five-stage progress indicator stays fixed regardless of batch size.
+Load your napplets or enter any napplet `naddr`. After login, the app looks up your latest signed NIP-65 (`kind:10002`) relay list using bootstrap relays. Your write relays and unmarked read/write relays are used for both napplet discovery and publishing; read-only relays are excluded. If no list is available, editable fallback relays are shown. An explicitly empty or read-only list requires adding a write relay. For another author’s naddr, discovery also checks that author’s NIP-65 write relays and the address’s relay hints. The migrated copy is signed by your connected account and published to your relays, leaving the source event intact. These relays remain configurable separately from the signer connection relay. Select events, prepare each one, review the changes, then migrate. A missing description must be filled in; `theme` starts as optional. The five-stage progress indicator stays fixed regardless of batch size. Truncated address chips copy the full naddr with one click; results use the migrated event’s address. Immutable snapshots use nevent references.
 
 ## Schema target
 
@@ -26,6 +26,10 @@ Pinned to PR #7 revision [`4d0fb2e`](https://github.com/dskvr/nips/blob/4d0fb2e9
 | `x <aggregate-hash> aggregate` | Removed; never reused as the artifact hash                                                           |
 | `requires <domain>`            | User chooses `R <domain>` or `O <domain>`                                                            |
 | Optional/legacy metadata       | Valid `icon`, `z`, `i`, `source`, title, servers and snapshot lineage retained; obsolete `C` removed |
+
+Source tags accept HTTP(S), `git://`, and [NIP-34 `nostr://` Git repository URLs](https://github.com/nostr-protocol/nips/blob/master/34.md), plus Blossom references including [BUD-10 URIs](https://github.com/hzrd149/blossom/blob/master/buds/10.md) with discovery hints. Legacy hash-only and `blossom://` spellings are also preserved. This extends the pinned draft’s HTTP(S)-only source wording as requested; references are preserved exactly without fetching their contents.
+
+During preparation, validation messages show each problematic tag’s array index and exact value. “View raw event JSON” exposes the original signed event and offers a JSON download, even when validation blocks review.
 
 Descriptions are rendered literally, never as HTML or Markdown. The spec does not forbid punctuation that resembles formatting; validation rejects empty text and non-text control characters without inventing a length limit.
 

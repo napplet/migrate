@@ -1,4 +1,6 @@
 import { test, expect, type Page } from '@playwright/test'
+import supersonic from './fixtures/supersonic-rc-revive.json' with { type: 'json' }
+import type { NostrEvent } from 'nostr-tools'
 import {
   finalizeEvent,
   generateSecretKey,
@@ -29,7 +31,14 @@ const fixtures = ['Tiny feed', 'Theme studio'].map((name, i) =>
 const foreignKey = generateSecretKey(),
   foreignPubkey = getPublicKey(foreignKey)
 const foreignManifest = finalizeEvent(
-  { ...fixtures[0], created_at: 100 },
+  {
+    ...fixtures[0],
+    created_at: 100,
+    tags: [
+      ...fixtures[0].tags,
+      ['source', `blossom:${'c'.repeat(64)}.zip?xs=source.example`],
+    ],
+  },
   foreignKey,
 )
 const foreignRelayList = finalizeEvent(
@@ -59,6 +68,7 @@ async function setup(
   accept = () => true,
   metadata: typeof relayList | null = relayList,
   traffic: { reads: string[]; writes: string[] } = { reads: [], writes: [] },
+  extraEvents: NostrEvent[] = [],
 ) {
   const published: any[] = []
   await page.exposeFunction('testSign', async (event: any) =>
@@ -86,10 +96,11 @@ async function setup(
           return
         }
         traffic.reads.push(ws.url())
-        for (const e of [...fixtures, foreignManifest].filter(
+        for (const e of [...fixtures, foreignManifest, ...extraEvents].filter(
           (e) =>
             filter.authors.includes(e.pubkey) &&
-            (!filter['#d'] || filter['#d'].includes(e.tags[0][1])) &&
+            (!filter['#d'] ||
+              filter['#d'].includes(e.tags.find((t) => t[0] === 'd')?.[1])) &&
             (e.pubkey !== foreignPubkey ||
               ws.url() === 'wss://source-author.example/'),
         ))
@@ -188,23 +199,43 @@ test('loads one owned naddr', async ({ page }) => {
 })
 test('migrates another author’s napplet to the connected account and its relays', async ({
   page,
+  context,
 }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write'])
   const traffic = { reads: [] as string[], writes: [] as string[] }
   const published = await setup(page, () => true, relayList, traffic)
   await page.getByRole('button', { name: 'Connect extension' }).click()
   await page.getByRole('button', { name: 'Specific napplet' }).click()
-  await page
-    .getByLabel('Napplet address')
-    .fill(
-      nip19.naddrEncode({
-        pubkey: foreignPubkey,
-        kind: 35129,
-        identifier: 'app-0',
-      }),
-    )
+  await page.getByLabel('Napplet address').fill(
+    nip19.naddrEncode({
+      pubkey: foreignPubkey,
+      kind: 35129,
+      identifier: 'app-0',
+    }),
+  )
   await page.getByRole('button', { name: 'Load napplet' }).click()
   await expect(page.getByText('1 napplet found')).toBeVisible()
+  const sourceAddress = nip19.naddrEncode({
+    pubkey: foreignPubkey,
+    kind: 35129,
+    identifier: 'app-0',
+  })
+  const chip = page.getByRole('button', { name: 'Copy naddr for Tiny feed' })
+  await expect(chip).toContainText('naddr1')
+  await expect(chip).toContainText('…')
+  await chip.click()
+  await expect(chip).toContainText('Copied')
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
+    sourceAddress,
+  )
+  await expect(page.getByRole('checkbox')).toBeChecked()
   await page.getByRole('button', { name: 'Begin Migration' }).click()
+  await page.getByRole('button', { name: 'Copy naddr for Tiny feed' }).focus()
+  await page.keyboard.press('Enter')
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
+    sourceAddress,
+  )
+
   await page.getByRole('button', { name: 'Review changes' }).click()
   await expect(
     page.getByText('Publishes a copy under your account.', { exact: false }),
@@ -218,6 +249,10 @@ test('migrates another author’s napplet to the connected account and its relay
   await expect(
     page.getByRole('heading', { name: 'All moved in.' }),
   ).toBeVisible()
+  await page.getByRole('button', { name: 'Copy naddr for Tiny feed' }).click()
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
+    nip19.naddrEncode({ pubkey, kind: 35129, identifier: 'app-0' }),
+  )
   expect(traffic.reads).toContain('wss://source-author.example/')
   expect([...new Set(traffic.writes)].sort()).toEqual([
     'wss://both.example/',
@@ -228,6 +263,10 @@ test('migrates another author’s napplet to the connected account and its relay
     published.every((e) => e.pubkey === pubkey && e.pubkey !== foreignPubkey),
   ).toBe(true)
   expect(published[0].tags).toContainEqual(['d', 'app-0'])
+  expect(published[0].tags).toContainEqual([
+    'source',
+    `blossom:${'c'.repeat(64)}.zip?xs=source.example`,
+  ])
 })
 test('QR connection uses custom relay and can be cancelled', async ({
   page,
@@ -351,4 +390,118 @@ test('read-only NIP-65 list asks for a write relay instead of using defaults', a
   await page.getByLabel('Relay URLs, one per line').fill('wss://outbox.example')
   await page.getByRole('button', { name: 'Load my napplets' }).click()
   await expect(page.getByText('2 napplets found')).toBeVisible()
+})
+
+test('the reported Supersonic napplet can be reviewed with its raw signed JSON', async ({
+  page,
+}) => {
+  const published = await setup(page, () => true, relayList, undefined, [
+    supersonic,
+  ])
+  await page.getByRole('button', { name: 'Connect extension' }).click()
+  await page.getByRole('button', { name: 'Specific napplet' }).click()
+  await page.getByLabel('Napplet address').fill(
+    nip19.naddrEncode({
+      pubkey: supersonic.pubkey,
+      kind: 35129,
+      identifier: 'n-143146b0d6f',
+    }),
+  )
+  await page.getByRole('button', { name: 'Load napplet' }).click()
+  await page.getByRole('button', { name: 'Begin Migration' }).click()
+  await expect(
+    page.getByRole('heading', { name: 'Supersonic RC Revive' }),
+  ).toBeVisible()
+  await expect(
+    page.getByRole('button', { name: 'Review changes' }),
+  ).toBeEnabled()
+  await page.getByText('View raw event JSON', { exact: true }).click()
+  const raw = page.getByLabel('Original event JSON')
+  await expect(raw).toBeVisible()
+  expect(JSON.parse((await raw.textContent())!)).toEqual(supersonic)
+  await expect(
+    page.getByRole('link', { name: 'Download event JSON' }),
+  ).toHaveAttribute('download', `napplet-${supersonic.id}.json`)
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true)
+  await page.getByRole('button', { name: 'Review changes' }).click()
+  await page.getByRole('button', { name: 'Migrate napplet' }).click()
+  await expect(
+    page.getByRole('heading', { name: 'All moved in.' }),
+  ).toBeVisible()
+  expect(published[0].tags).toContainEqual(
+    supersonic.tags.find((t) => t[0] === 'source'),
+  )
+  expect(published[0].tags).toContainEqual(
+    supersonic.tags.find((t) => t[0] === 'source-archive'),
+  )
+})
+
+test('validation displays the offending tag and index before review', async ({
+  page,
+}, testInfo) => {
+  const bad = finalizeEvent(
+    {
+      ...fixtures[0],
+      created_at: 500,
+      tags: [
+        ['source', 'invalid://<script>oops</script>'],
+        ...fixtures[0].tags,
+      ],
+    },
+    key,
+  )
+  await setup(page, () => true, relayList, undefined, [bad])
+  await page.getByRole('button', { name: 'Connect extension' }).click()
+  await page.getByRole('button', { name: 'Specific napplet' }).click()
+  await page
+    .getByLabel('Napplet address')
+    .fill(nip19.naddrEncode({ pubkey, kind: 35129, identifier: 'app-0' }))
+  await page.getByRole('button', { name: 'Load napplet' }).click()
+  await page.getByRole('button', { name: 'Begin Migration' }).click()
+  const issue = page.locator('.validation-issue')
+  await expect(issue).toContainText('Source must be')
+  await expect(issue).toContainText('tags[0]')
+  await expect(issue).toContainText('invalid://<script>oops</script>')
+  expect(await issue.locator('script').count()).toBe(0)
+  await expect(
+    page.getByRole('button', { name: 'Review changes' }),
+  ).toBeDisabled()
+  await page.getByText('View raw event JSON', { exact: true }).click()
+  expect(
+    JSON.parse((await page.getByLabel('Original event JSON').textContent())!),
+  ).toEqual(JSON.parse(JSON.stringify(bad)))
+  await page.screenshot({
+    path: testInfo.outputPath('validation-context.png'),
+    fullPage: true,
+  })
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true)
+})
+
+test('address chip offers the full address when clipboard access fails', async ({
+  page,
+}) => {
+  await setup(page)
+  await page.evaluate(() => {
+    Object.defineProperty(navigator.clipboard, 'writeText', {
+      value: async () => {
+        throw new Error('Clipboard blocked')
+      },
+    })
+  })
+  await page.getByRole('button', { name: 'Connect extension' }).click()
+  await page.getByRole('button', { name: 'Load my napplets' }).click()
+  const chip = page.getByRole('button', { name: 'Copy naddr for Tiny feed' })
+  await chip.click()
+  await expect(page.getByLabel('Address to copy')).toHaveValue(
+    nip19.naddrEncode({ pubkey, kind: 35129, identifier: 'app-0' }),
+  )
+  await expect(chip).not.toContainText('Copied')
 })
