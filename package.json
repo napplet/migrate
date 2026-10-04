@@ -1,0 +1,50 @@
+{
+  "name": "napplet-migrate",
+  "version": "1.0.0",
+  "description": "Migrate napplet manifests to the proposed standalone NIP-5D schema",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "check": "svelte-check --tsconfig ./tsconfig.json",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "setup:github": "node scripts/setup-github.mjs",
+    "deploy": "node scripts/deploy-bunny.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/napplet/migrate.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/napplet/migrate/issues"
+  },
+  "homepage": "https://github.com/napplet/migrate#readme",
+  "dependencies": {
+    "nostr-tools": "^2.25.2",
+    "qrcode": "^1.5.4",
+    "svelte": "^5.57.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@sveltejs/vite-plugin-svelte": "^7.3.1",
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/node": "^26.6.4",
+    "@types/qrcode": "^1.5.6",
+    "prettier": "^3.9.9",
+    "prettier-plugin-svelte": "^4.1.1",
+    "svelte-check": "^4.7.6",
+    "tailwindcss": "^4.3.3",
+    "typescript": "~6.0.3",
+    "vite": "^8.3.2",
+    "vitest": "^5.0.3"
+  },
+  "private": true,
+  "engines": {
+    "node": ">=24"
+  }
+}
