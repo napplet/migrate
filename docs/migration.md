@@ -35,3 +35,7 @@ The migration targets [PR #7](https://github.com/dskvr/nips/pull/7) at pinned re
 **Automatic migration limits:** ambiguous identifiers, malformed structural metadata, and multi-file manifests block migration. Rebundle multi-file artifacts first. Invalid optional icons are removed with a review note. The artifact itself is never fetched, changed, executed, or uploaded; its hash comes from the original signed `/index.html` path.
 
 Signatures, authorship, and exact signer output are verified before publication. Success requires at least one positive relay acknowledgement; partial failures are listed. Retrying a failed publication reuses the signed event. Discovery depends on the configured relays’ available history, and immutable legacy snapshots may remain discoverable after migration.
+
+## Controller declarations
+
+This non-normative guidance defers to the living [NAP-GAMEPAD proposal](https://github.com/napplet/naps/pull/108) and [NIP-5D](https://github.com/nostr-protocol/nips/pull/2303). Migration preserves the bare `gamepad` domain and the author's required/optional choice; it does not add controller capabilities automatically. Choose optional controller support when keyboard or pointer controls fulfill the core task. A migrated manifest does not upgrade app code or make the target runtime GAMEPAD-capable. Native controller access and focus isolation remain the runtime's responsibility.
