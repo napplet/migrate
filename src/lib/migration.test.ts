@@ -51,6 +51,16 @@ describe('standalone manifest migration', () => {
     ).toBe(false)
     expect(JSON.stringify(old)).toBe(before)
   })
+  it('preserves GAMEPAD as a bare required or optional domain chosen by the author', () => {
+    const draft = createDraft(event([['requires', 'gamepad']]))
+    expect(buildMigration(draft).tags).toContainEqual(['R', 'gamepad'])
+    draft.capabilities.find((capability) => capability.name === 'gamepad')!.optional = true
+    const next = buildMigration(draft)
+    expect(next.tags).toContainEqual(['O', 'gamepad'])
+    expect(next.tags).not.toContainEqual(['R', 'gamepad'])
+    const current = createDraft(event([['O', 'gamepad']]))
+    expect(buildMigration(current).tags).toContainEqual(['O', 'gamepad'])
+  })
   it('allows overriding theme and required API defaults', () => {
     const d = createDraft(event())
     d.capabilities.forEach((c) => (c.optional = !c.optional))
